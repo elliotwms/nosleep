@@ -60,3 +60,34 @@ func twoDirectives() {
 	//nosleep:allow this one is shadowed by the trailing directive
 	time.Sleep(time.Second) //nosleep:allow this one wins
 }
+
+// multiLineAbove works because the directive sits above the call's first line.
+func multiLineAbove() {
+	//nosleep:allow the duration is computed, which is why the call is wrapped
+	time.Sleep(
+		time.Second * 2,
+	)
+}
+
+// multiLineClosing is the natural place to put a directive on a wrapped call.
+// It must both suppress the call and count as used.
+func multiLineClosing() {
+	time.Sleep(
+		time.Second * 2,
+	) //nosleep:allow the duration is computed, which is why the call is wrapped
+}
+
+// multiLineInside is inside the call's span, so it governs the call too.
+func multiLineInside() {
+	time.Sleep(
+		time.Second * 2, //nosleep:allow the duration is computed, which is why the call is wrapped
+	)
+}
+
+// multiLineBareClosing still fails closed on a wrapped call.
+func multiLineBareClosing() {
+	// want +3 `//nosleep:allow requires a reason`
+	time.Sleep( // want "time.Sleep detected"
+		time.Second * 2,
+	) //nosleep:allow
+}

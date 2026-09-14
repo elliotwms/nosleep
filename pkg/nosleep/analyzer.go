@@ -25,7 +25,7 @@ By default only test files are checked, since sleeping in production code is
 often legitimate. Pass -all-files to check every file.
 
 A call may be allowed with a directive comment giving the reason it is
-necessary, placed on the same line as the call or on the line above it:
+necessary, placed on any line of the call or on the line above it:
 
 	time.Sleep(time.Second) //nosleep:allow the API has no synchronous variant
 
@@ -95,7 +95,8 @@ func (s *settings) run(pass *analysis.Pass) (any, error) {
 			return
 		}
 
-		if d, ok := ds.lookup(pos.Filename, pos.Line); ok {
+		end := pass.Fset.Position(call.End())
+		if d, ok := ds.lookup(pos.Filename, pos.Line, end.Line); ok {
 			if d.reason != "" {
 				return
 			}

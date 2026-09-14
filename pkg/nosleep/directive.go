@@ -60,22 +60,27 @@ func newDirectives(fset *token.FileSet, files []*ast.File) directives {
 	return ds
 }
 
-// lookup returns the directive governing the given line, which is either a
-// directive on the line itself or one on the line immediately above it, and
-// marks it as matched.
-func (ds directives) lookup(filename string, line int) (*directive, bool) {
+// lookup returns the directive governing a call spanning the lines first to
+// last inclusive, and marks it as matched. That is a trailing directive on any
+// line of the call, so that a multi-line call can carry its directive on the
+// closing line as naturally as on the opening one, or failing that a directive
+// on the line immediately above the call.
+func (ds directives) lookup(filename string, first, last int) (*directive, bool) {
 	byLine, ok := ds[filename]
 	if !ok {
 		return nil, false
 	}
 
-	// A trailing directive on the same line takes precedence over one on the
-	// line above, so that the closest directive to the call always wins.
-	d, ok := byLine[line]
-	if !ok {
-		d, ok = byLine[line-1]
+	// A directive on the call itself takes precedence over one above it, so
+	// that the closest directive to the call always wins.
+	for line := first; line <= last; line++ {
+		if d, ok := byLine[line]; ok {
+			d.matched = true
+			return d, true
+		}
 	}
 
+	d, ok := byLine[first-1]
 	if !ok {
 		return nil, false
 	}
