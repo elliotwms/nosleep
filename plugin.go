@@ -4,12 +4,13 @@
 // Build a golangci-lint binary which includes it by listing this module in
 // .custom-gcl.yml:
 //
-//	version: v2.13.2
+//	version: v2.13.2 # the golangci-lint release to build
 //	plugins:
 //	  - module: github.com/elliotwms/nosleep
-//	    version: v1.0.0
+//	    version: v1.2.3 # a nosleep release tag, or anything go get accepts
 //
-// then enable and, optionally, configure it in .golangci.yml:
+// then enable and, optionally, configure it in .golangci.yml. Custom linters
+// are not enabled by default, so the enable entry is required:
 //
 //	linters:
 //	  enable:
