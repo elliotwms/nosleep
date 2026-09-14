@@ -94,8 +94,38 @@ would mean following assignments for little benefit.
 
 ## golangci-lint
 
-Not supported yet. A [module plugin][module-plugins] is the intended route; see
-the issue tracker.
+`nosleep` is a golangci-lint [module plugin][module-plugins]. Build a
+golangci-lint binary which includes it by adding a `.custom-gcl.yml` next to
+your `.golangci.yml`:
+
+```yaml
+version: v2.13.2 # the golangci-lint version to build
+plugins:
+  - module: github.com/elliotwms/nosleep
+    version: v1.0.0
+```
+
+and running `golangci-lint custom`, which produces a `custom-gcl` binary to use
+in place of `golangci-lint`. Then enable the linter:
+
+```yaml
+version: "2"
+linters:
+  enable:
+    - nosleep
+  settings:
+    custom:
+      nosleep:
+        type: module
+        description: Reports time.Sleep calls that have not been justified.
+        original-url: github.com/elliotwms/nosleep
+        settings:
+          all-files: false # the default; true checks every file
+```
+
+The keys under `settings` match the flags of the standalone binary. Under
+golangci-lint the usual `//nolint:nosleep` works as well as `//nosleep:allow`,
+but only the latter insists on a reason.
 
 [module-plugins]: https://golangci-lint.run/docs/plugins/module-plugins/
 

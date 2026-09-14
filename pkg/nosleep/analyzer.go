@@ -39,22 +39,32 @@ load-bearing.`
 // URL is the documentation link attached to reported diagnostics.
 const URL = "https://github.com/elliotwms/nosleep"
 
-// Analyzer is the nosleep analysis pass.
+// Analyzer is the nosleep analysis pass with default settings.
 //
 // It carries package-level flag state, so tests which need to vary the
 // configuration should call NewAnalyzer instead of mutating this value.
 var Analyzer = NewAnalyzer()
 
-// settings holds the analyzer's configurable behaviour.
-type settings struct {
-	// all checks every file rather than only _test.go files.
-	all bool
+// Settings configures the analyzer. The zero value is the default behaviour.
+//
+// The JSON tags name the keys accepted under the linter's settings block in a
+// golangci-lint configuration, and match the command-line flags of the
+// standalone binary.
+type Settings struct {
+	// AllFiles checks every file rather than only _test.go files.
+	AllFiles bool `json:"all-files"`
 }
 
-// NewAnalyzer returns a new nosleep analyzer with its own flag state.
+// NewAnalyzer returns a new nosleep analyzer with default settings and its own
+// flag state.
 func NewAnalyzer() *analysis.Analyzer {
-	s := &settings{}
+	return NewAnalyzerWithSettings(Settings{})
+}
 
+// NewAnalyzerWithSettings returns a new nosleep analyzer configured by s. The
+// analyzer's flags are bound to a private copy of s, so flags given on the
+// command line override it and the caller's value is left alone.
+func NewAnalyzerWithSettings(s Settings) *analysis.Analyzer {
 	a := &analysis.Analyzer{
 		Name:     "nosleep",
 		Doc:      doc,
@@ -64,12 +74,12 @@ func NewAnalyzer() *analysis.Analyzer {
 	}
 
 	a.Flags.Init("nosleep", flag.ExitOnError)
-	a.Flags.BoolVar(&s.all, "all-files", false, "check all files, not just _test.go files")
+	a.Flags.BoolVar(&s.AllFiles, "all-files", s.AllFiles, "check all files, not just _test.go files")
 
 	return a
 }
 
-func (s *settings) run(pass *analysis.Pass) (any, error) {
+func (s *Settings) run(pass *analysis.Pass) (any, error) {
 	in, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !ok {
 		// Unreachable via the analysis framework, which guarantees Requires
@@ -80,7 +90,7 @@ func (s *settings) run(pass *analysis.Pass) (any, error) {
 	ds := newDirectives(pass.Fset, pass.Files)
 
 	analysed := func(filename string) bool {
-		return s.all || isTestFile(filename)
+		return s.AllFiles || isTestFile(filename)
 	}
 
 	in.Preorder([]ast.Node{(*ast.CallExpr)(nil)}, func(node ast.Node) {
