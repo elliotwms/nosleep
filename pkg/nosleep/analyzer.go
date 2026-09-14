@@ -30,7 +30,11 @@ necessary, placed on the same line as the call or on the line above it:
 	time.Sleep(time.Second) //nosleep:allow the API has no synchronous variant
 
 The reason is mandatory: a bare //nosleep:allow is reported, and does not
-suppress the diagnostic.`
+suppress the diagnostic.
+
+A directive which governs no call is reported too, so that a justification
+left behind after its sleep was removed does not sit there looking
+load-bearing.`
 
 // URL is the documentation link attached to reported diagnostics.
 const URL = "https://github.com/elliotwms/nosleep"
@@ -75,6 +79,10 @@ func (s *settings) run(pass *analysis.Pass) (any, error) {
 
 	ds := newDirectives(pass.Fset, pass.Files)
 
+	analysed := func(filename string) bool {
+		return s.all || isTestFile(filename)
+	}
+
 	in.Preorder([]ast.Node{(*ast.CallExpr)(nil)}, func(node ast.Node) {
 		call := node.(*ast.CallExpr) // always a CallExpr thanks to the node filter
 
@@ -83,7 +91,7 @@ func (s *settings) run(pass *analysis.Pass) (any, error) {
 		}
 
 		pos := pass.Fset.Position(call.Pos())
-		if !s.all && !isTestFile(pos.Filename) {
+		if !analysed(pos.Filename) {
 			return
 		}
 
@@ -105,6 +113,8 @@ func (s *settings) run(pass *analysis.Pass) (any, error) {
 			URL:     URL,
 		})
 	})
+
+	ds.reportUnused(pass, analysed)
 
 	return nil, nil
 }

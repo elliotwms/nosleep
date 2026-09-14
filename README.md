@@ -51,6 +51,20 @@ not suppress anything, so the directive cannot be used to wave a sleep through
 without explanation. That requirement is the point of the linter: the goal is not
 to ban sleeping, but to make sure every sleep is _really_ necessary.
 
+**Stale directives are reported too.** A `//nosleep:allow` which governs no
+`time.Sleep` is flagged, so a justification does not outlive the sleep it was
+written for and sit there looking load-bearing:
+
+```go
+func TestReady(t *testing.T) {
+	//nosleep:allow the fixture server has no readiness endpoint
+	waitForReady() // the sleep went away; the excuse did not
+}
+```
+
+Only files which are actually being checked are considered, so a directive in a
+non-test file is left alone unless you pass `-all-files`.
+
 ## What is detected
 
 `nosleep` resolves calls through the type checker rather than matching on the
