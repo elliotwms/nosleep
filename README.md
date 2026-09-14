@@ -14,6 +14,10 @@ each one has to be justified, rather than reached for out of habit.
 go install github.com/elliotwms/nosleep/cmd/nosleep@latest
 ```
 
+Prebuilt binaries for Linux, macOS and Windows are attached to each
+[release](https://github.com/elliotwms/nosleep/releases), with a
+`checksums.txt` to verify them against.
+
 ## Usage
 
 ```sh

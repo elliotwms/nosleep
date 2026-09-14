@@ -57,3 +57,13 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
+
+      - name: Third-party notices are up to date
+        run: hack/notices.sh | diff - THIRD_PARTY_NOTICES
+
+      - name: goreleaser config is valid
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
