@@ -1,0 +1,6 @@
+# Build output
+/nosleep
+/dist/
+
+# Test output
+*.out

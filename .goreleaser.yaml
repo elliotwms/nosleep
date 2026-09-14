@@ -1,0 +1,60 @@
+# goreleaser configuration. Validated in CI with `goreleaser check`; run
+# `goreleaser release --snapshot --clean` to build locally without publishing.
+version: 2
+
+project_name: nosleep
+
+builds:
+  - id: nosleep
+    main: ./cmd/nosleep
+    binary: nosleep
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Reproducible: no local paths in the binary, and the build timestamp is
+    # taken from the commit rather than the wall clock.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    # The dependencies are BSD-licensed, which requires their copyright
+    # notices to accompany binary distributions.
+    files:
+      - LICENSE
+      - THIRD_PARTY_NOTICES
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^ci:"
+      - "^test:"
+
+release:
+  github:
+    owner: elliotwms
+    name: nosleep
+  prerelease: auto
